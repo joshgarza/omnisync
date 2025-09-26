@@ -1,0 +1,72 @@
+services:
+  # --- Database Service (PostgreSQL) ---
+  db:
+    image: postgres:16-alpine # Use a lightweight, stable image
+    container_name: omnisync_db
+    restart: always
+    environment:
+      # These variables are read from the external .env file
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # 1. Named volume for data persistence (Cross-platform safe)
+      - db_data:/var/lib/postgresql/data
+      # 2. Initialization script to create schema/seed data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      # Map the internal port to a host port (optional, for debugging)
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Backend Service (Node/Express) ---
+  backend:
+    build:
+      context: ./backend
+      target: development # Use a development stage for faster rebuilds/debugging
+    container_name: omnisync_backend
+    restart: always
+    # Wait for the DB to be healthy before starting API
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Inject connection string using service names
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      NODE_ENV: development
+    volumes:
+      # 1. Bind mount for source code
+      - ./backend:/app
+      # 2. Volume Mask: Prevents host's node_modules from overriding container's
+      - /app/node_modules
+    ports:
+      - "8080:8080" # API exposed on port 8080
+    command: npm run dev
+
+  # --- Frontend Service (React) ---
+  frontend:
+    build:
+      context: ./frontend
+      target: development # Use a development stage
+    container_name: omnisync_frontend
+    restart: always
+    volumes:
+      # 1. Bind mount for source code
+      - ./frontend:/app
+      # 2. Volume Mask
+      - /app/node_modules
+    # Ports for React dev server, mapping to different host port to avoid conflict
+    ports:
+      - "5173:5173"
+    environment:
+      # Tells the React app where to find the API
+      VITE_API_URL: http://localhost:8080 # Use localhost for communication from the browser
+      NODE_ENV: development
+
+# --- Named Volumes Definition ---
+volumes:
+  db_data: # This is the cross-platform way to persist DB data

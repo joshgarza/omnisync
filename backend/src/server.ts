@@ -11,10 +11,8 @@ app.use('/api', cardRoutes);
 
 async function startServer() {
     try {
-        // 1. Ensure DB connection is established
         await connectToDatabase();
         
-        // 2. Start the Express server
         app.listen(PORT, () => {
             console.log(`Server listening on port ${PORT}`);
             console.log(`Database URL: ${process.env.DATABASE_URL}`);

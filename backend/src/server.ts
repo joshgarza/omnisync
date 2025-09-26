@@ -1,11 +1,13 @@
 import express, { Request, Response } from 'express';
 import { connectToDatabase } from './db';
 import 'dotenv/config'; // For local testing outside of Docker
+import cors from 'cors';
 import cardRoutes from './routes'; 
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 8080;
 
+app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 app.use('/api', cardRoutes);
 

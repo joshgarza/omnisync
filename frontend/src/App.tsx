@@ -32,7 +32,7 @@ function App() {
     const [status, setStatus] = useState("Loading cards...");
 
     // The API URL is injected via VITE_API_URL in docker-compose.yml
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         const fetchCards = async () => {

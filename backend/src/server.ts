@@ -1,27 +1,29 @@
 import express, { Request, Response } from 'express';
+import { connectToDatabase } from './db';
 import 'dotenv/config'; // For local testing outside of Docker
+import cardRoutes from './routes'; 
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 8080;
 
 app.use(express.json());
+app.use('/api', cardRoutes);
 
-// Placeholder Root Route
-app.get('/', (req: Request, res: Response) => {
-    res.status(200).send('Omnisync Backend is running.');
-});
+async function startServer() {
+    try {
+        // 1. Ensure DB connection is established
+        await connectToDatabase();
+        
+        // 2. Start the Express server
+        app.listen(PORT, () => {
+            console.log(`Server listening on port ${PORT}`);
+            console.log(`Database URL: ${process.env.DATABASE_URL}`);
+        });
+    } catch (error) {
+        // If connection fails, log and exit the process (Docker will try to restart)
+        console.error('FATAL: Server startup failed due to database error.');
+        process.exit(1); 
+    }
+}
 
-// Placeholder API Route to test communication
-app.get('/api/cards', (req: Request, res: Response) => {
-    // In a real implementation, this would query the DB
-    const placeholderCards = [
-        { id: 1, click_count: 0, first_click_timestamp: null },
-        { id: 2, click_count: 0, first_click_timestamp: null }
-    ];
-    res.status(200).json(placeholderCards);
-});
-
-app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-    console.log(`Database URL: ${process.env.DATABASE_URL}`);
-});
+startServer();

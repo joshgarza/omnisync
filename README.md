@@ -17,7 +17,7 @@ You must have [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
 1. **Clone the Repository:**
 
    ```bash
-   git clone [https://github.com/joshgarza/omnisync.git](https://github.com/joshgarza/omnisync.git)
+   git clone https://github.com/joshgarza/omnisync.git
    cd omnisync
    ```
 

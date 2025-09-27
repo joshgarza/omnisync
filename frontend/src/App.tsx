@@ -64,7 +64,7 @@ const ControlsBar: React.FC<{
 function App() {
   const [cards, setCards] = useState<CardData[]>([]);
   const [status, setStatus] = useState('Loading cards...');
-  const [sortBy, setSortBy] = useState<SortMode>('ORIGINAL'); // <<< NEW: Add sorting state placeholder
+  const [sortBy, setSortBy] = useState<SortMode>('TIME_ASC'); // <<< NEW: Add sorting state placeholder
 
   // The API URL is injected via VITE_API_URL in docker-compose.yml
   const API_URL = import.meta.env.VITE_API_URL;

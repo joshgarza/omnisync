@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { type CardData } from './types'; // Import the new interface
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { type CardData, type SortMode } from './types'; // Import the new interface
 
 // Placeholder for the full card component
 const Card: React.FC<{ card: CardData; onClick: (id: number) => void }> = ({ card, onClick }) => {
@@ -30,10 +30,41 @@ const Card: React.FC<{ card: CardData; onClick: (id: number) => void }> = ({ car
   );
 };
 
+const ControlsBar: React.FC<{
+  sortBy: SortMode;
+  onSortChange: (mode: SortMode) => void;
+  onReset: () => void;
+}> = ({ sortBy, onSortChange, onReset }) => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: '20px 0',
+        gap: '20px',
+      }}
+    >
+      <label>
+        Sort By:
+        <select
+          value={sortBy}
+          onChange={(e) => onSortChange(e.target.value as SortMode)}
+          style={{ marginLeft: '10px', padding: '5px' }}
+        >
+          <option value="ORIGINAL">Original Order (1 → 8)</option>
+          <option value="CLICKS_DESC">Most Clicks → Fewest Clicks</option>
+          <option value="TIME_ASC">First Clicked → Last Clicked</option>
+        </select>
+      </label>
+    </div>
+  );
+};
+
 function App() {
   const [cards, setCards] = useState<CardData[]>([]);
   const [status, setStatus] = useState('Loading cards...');
-  const [sortBy, setSortBy] = useState<'ORIGINAL' | 'CLICKS_DESC' | 'TIME_ASC'>('ORIGINAL'); // <<< NEW: Add sorting state placeholder
+  const [sortBy, setSortBy] = useState<SortMode>('ORIGINAL'); // <<< NEW: Add sorting state placeholder
 
   // The API URL is injected via VITE_API_URL in docker-compose.yml
   const API_URL = import.meta.env.VITE_API_URL;
@@ -86,14 +117,14 @@ function App() {
 
         // *** Placeholder UI Update Logic ***
         setCards((prevCards) => {
-          const newCards = prevCards.map((card) =>
+          const updatedList = prevCards.map((card) =>
             card.id === updatedCard.id ? updatedCard : card
           );
 
           // NOTE: The sorting logic will be implemented here later.
           // For now, we're just updating the data in its current position.
 
-          return newCards;
+          return sortCards(updatedList, sortBy);
         });
         // **********************************
 
@@ -141,10 +172,50 @@ function App() {
     }
   }, [API_URL]);
 
+  const sortCards = useCallback((currentCards: CardData[], mode: SortMode): CardData[] => {
+    const sorted = [...currentCards]; // Work on a copy
+
+    if (mode === 'ORIGINAL') {
+      return sorted.sort((a, b) => a.id - b.id);
+    }
+
+    if (mode === 'CLICKS_DESC') {
+      // Most clicks (b) comes before fewest clicks (a)
+      return sorted.sort((a, b) => b.click_count - a.click_count);
+    }
+
+    if (mode === 'TIME_ASC') {
+      return sorted.sort((a, b) => {
+        const timeA = a.first_click_timestamp
+          ? new Date(a.first_click_timestamp).getTime()
+          : Infinity;
+        const timeB = b.first_click_timestamp
+          ? new Date(b.first_click_timestamp).getTime()
+          : Infinity;
+
+        // If a card hasn't been clicked, its time is Infinity, pushing it to the end.
+        return timeA - timeB;
+      });
+    }
+
+    return sorted; // Fallback
+  }, []);
+
+  // Recalculate the displayed list only when 'cards' or 'sortBy' changes.
+  const sortedCardsForDisplay = useMemo(() => {
+    return sortCards(cards, sortBy);
+  }, [cards, sortBy, sortCards]);
+
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <h1>Omnisync Card Tracker</h1>
       <p style={{ color: cards.length > 0 ? 'green' : 'red' }}>Status: {status}</p>
+
+      <ControlsBar
+        sortBy={sortBy}
+        onSortChange={setSortBy} // Allows the select dropdown to change the state
+        onReset={handleReset}
+      />
 
       <div style={{ margin: '20px 0', textAlign: 'center' }}>
         <button
@@ -174,7 +245,7 @@ function App() {
           margin: '0 auto',
         }}
       >
-        {cards.map((card) => (
+        {sortedCardsForDisplay.map((card) => (
           <Card key={card.id} card={card} onClick={handleCardClick} />
         ))}
       </div>

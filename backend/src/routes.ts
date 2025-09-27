@@ -42,6 +42,44 @@ router.get('/cards', async (req: Request, res: Response) => {
     }
 });
 
+router.post('/cards/:id/click', async (req: Request, res: Response) => {
+    const cardId = parseInt(req.params.id, 10);
+    
+    // 1. Validate card ID
+    if (isNaN(cardId) || cardId < 1 || cardId > 8) {
+        return res.status(400).json({ message: 'Invalid card ID. Must be between 1 and 8.' });
+    }
+
+    try {
+        // 2. Execute a single, atomic UPDATE query
+        const updateResult = await pool.query(`
+            UPDATE card_clicks
+            SET 
+                click_count = click_count + 1,
+                -- COALESCE ensures the timestamp is only set if it's currently NULL
+                first_click_timestamp = COALESCE(first_click_timestamp, NOW())
+            WHERE id = $1
+            RETURNING id, click_count, first_click_timestamp;
+        `, [cardId]);
+
+        // 3. Handle resource not found (if ID was valid but row was deleted)
+        if (updateResult.rowCount === 0) {
+            return res.status(404).json({ message: 'Card not found.' });
+        }
+
+        // 4. Map, Log, and Respond
+        const updatedCard: CardData = mapCardResult(updateResult.rows[0]);
+        console.log(`Card ${cardId} clicked. Updated data:`, updatedCard);
+        res.status(200).json(updatedCard);
+    }
+    catch (error) {
+        // 5. Handle any SQL/database errors
+        console.error(`Error updating card ${cardId}:`, error);
+        // No explicit ROLLBACK needed since no BEGIN was issued, the single query failed cleanly.
+        res.status(500).json({ message: 'Internal Server Error: Could not update card data.' });
+    }
+});
+
 // Since we are only implementing GET /api/cards right now, 
 // we won't include the POST /api/cards/:id/click or POST /api/reset endpoints yet.
 

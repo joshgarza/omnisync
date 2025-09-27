@@ -5,6 +5,34 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>
+    <style>
+      :root {
+        --bg-primary: #ffffff;
+        --text-primary: #333333;
+        --border-card: #ccc;
+        --card-bg-clicked: #eff6ff;
+        --card-text-secondary: #555;
+        --header-color: #000000;
+      }
+
+      /* Dark Mode Variables */
+      .DARK {
+        --bg-primary: #1a1a2e; /* Deep blue/purple dark background */
+        --text-primary: #e0e0e0;
+        --border-card: #3d3d5c;
+        --card-bg-clicked: #323955; /* Slightly lighter than background */
+        --card-text-secondary: #aaaaaa;
+        --header-color: #ffffff;
+      }
+
+      body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        transition:
+          background-color 0.3s,
+          color 0.3s;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

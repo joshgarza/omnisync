@@ -6,3 +6,5 @@ export interface CardData {
 }
 
 export type SortMode = 'ORIGINAL' | 'CLICKS_DESC' | 'TIME_ASC';
+
+export type ThemeMode = 'LIGHT' | 'DARK';

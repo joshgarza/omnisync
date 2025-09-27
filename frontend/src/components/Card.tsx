@@ -25,11 +25,12 @@ export const Card: React.FC<CardProps> = ({ card, onClick }) => {
         flexGrow: 1,
 
         // Visual Styles
-        border: `2px solid ${isClicked ? '#2563eb' : '#ddd'}`,
+        border: `2px solid ${isClicked ? '#2563eb' : 'var(--border-card)'}`,
         borderRadius: '12px',
         margin: '10px',
         cursor: 'pointer',
-        backgroundColor: isClicked ? '#eff6ff' : '#ffffff',
+        backgroundColor: isClicked ? 'var(--card-bg-clicked)' : 'var(--bg-primary)',
+        color: 'var(--text-primary)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         transition: 'all 0.2s ease-in-out',
         overflow: 'hidden', // Ensures positioned data stays within bounds
@@ -44,7 +45,7 @@ export const Card: React.FC<CardProps> = ({ card, onClick }) => {
           height: '100%',
           fontSize: '5rem',
           fontWeight: '800',
-          color: isClicked ? '#2563eb' : '#333',
+          color: isClicked ? '#2563eb' : 'var(--header-color)',
           opacity: 0.9,
         }}
       >
@@ -60,7 +61,7 @@ export const Card: React.FC<CardProps> = ({ card, onClick }) => {
           margin: 0,
           fontSize: '0.8rem',
           fontWeight: 'bold',
-          color: '#059669',
+          color: '#059669', // Constant color not dependent on theme
         }}
       >
         {card.click_count} Clicks
@@ -74,7 +75,7 @@ export const Card: React.FC<CardProps> = ({ card, onClick }) => {
           right: '10px',
           margin: 0,
           fontSize: '0.8rem',
-          color: '#555',
+          color: 'var(--card-text-secondary)',
           textAlign: 'right',
         }}
         title={timestampText !== 'N/A' ? `First clicked at ${timestampText}` : undefined}

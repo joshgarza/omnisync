@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { type CardData, type SortMode } from './types'; // Import the new interface
 
-// Placeholder for the full card component
 const Card: React.FC<{ card: CardData; onClick: (id: number) => void }> = ({ card, onClick }) => {
   const timestampText = card.first_click_timestamp
     ? new Date(card.first_click_timestamp).toLocaleTimeString()
@@ -33,8 +32,7 @@ const Card: React.FC<{ card: CardData; onClick: (id: number) => void }> = ({ car
 const ControlsBar: React.FC<{
   sortBy: SortMode;
   onSortChange: (mode: SortMode) => void;
-  onReset: () => void;
-}> = ({ sortBy, onSortChange, onReset }) => {
+}> = ({ sortBy, onSortChange }) => {
   return (
     <div
       style={{
@@ -64,7 +62,7 @@ const ControlsBar: React.FC<{
 function App() {
   const [cards, setCards] = useState<CardData[]>([]);
   const [status, setStatus] = useState('Loading cards...');
-  const [sortBy, setSortBy] = useState<SortMode>('TIME_ASC'); // <<< NEW: Add sorting state placeholder
+  const [sortBy, setSortBy] = useState<SortMode>('TIME_ASC');
 
   // The API URL is injected via VITE_API_URL in docker-compose.yml
   const API_URL = import.meta.env.VITE_API_URL;
@@ -73,7 +71,6 @@ function App() {
     try {
       setStatus('Fetching data from backend...');
 
-      // Fetch from the full API endpoint
       const response = await fetch(`${API_URL}/api/cards`);
 
       if (!response.ok) {
@@ -99,34 +96,26 @@ function App() {
       try {
         setStatus(`Registering click for Card ${cardId}...`);
 
-        // POST request to the backend endpoint
         const response = await fetch(`${API_URL}/api/cards/${cardId}/click`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          // NOTE: No body needed for this endpoint
         });
 
         if (!response.ok) {
           throw new Error(`Failed to register click. Status: ${response.status}`);
         }
 
-        // Get the single updated card from the response body
         const updatedCard: CardData = await response.json();
 
-        // *** Placeholder UI Update Logic ***
         setCards((prevCards) => {
           const updatedList = prevCards.map((card) =>
             card.id === updatedCard.id ? updatedCard : card
           );
 
-          // NOTE: The sorting logic will be implemented here later.
-          // For now, we're just updating the data in its current position.
-
           return sortCards(updatedList, sortBy);
         });
-        // **********************************
 
         setStatus(`Click registered for Card ${cardId}.`);
       } catch (error) {
@@ -161,10 +150,7 @@ function App() {
 
       // Reset the entire card state with the new data
       setCards(resetCards);
-
-      // Crucial: Reset the sorting state to ORIGINAL as per requirements
-      setSortBy('ORIGINAL');
-
+      setSortBy('ORIGINAL'); // Reset sorting to original order 1-8
       setStatus('All card data successfully reset.');
     } catch (error) {
       console.error('Reset failed:', error);
@@ -173,7 +159,7 @@ function App() {
   }, [API_URL]);
 
   const sortCards = useCallback((currentCards: CardData[], mode: SortMode): CardData[] => {
-    const sorted = [...currentCards]; // Work on a copy
+    const sorted = [...currentCards];
 
     if (mode === 'ORIGINAL') {
       return sorted.sort((a, b) => a.id - b.id);
@@ -214,7 +200,6 @@ function App() {
       <ControlsBar
         sortBy={sortBy}
         onSortChange={setSortBy} // Allows the select dropdown to change the state
-        onReset={handleReset}
       />
 
       <div style={{ margin: '20px 0', textAlign: 'center' }}>
@@ -224,7 +209,7 @@ function App() {
             padding: '10px 20px',
             fontSize: '16px',
             cursor: 'pointer',
-            backgroundColor: '#dc3545', // Red color for caution
+            backgroundColor: '#dc3545',
             color: 'white',
             border: 'none',
             borderRadius: '4px',

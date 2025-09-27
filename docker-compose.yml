@@ -1,7 +1,7 @@
 services:
   # --- Database Service (PostgreSQL) ---
   db:
-    image: postgres:16-alpine # Use a lightweight, stable image
+    image: postgres:16-alpine
     container_name: omnisync_db
     restart: always
     environment:
@@ -15,10 +15,9 @@ services:
       # 2. Initialization script to create schema/seed data
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      # Map the internal port to a host port (optional, for debugging)
-      - "5432:5432"
+      - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,7 +26,7 @@ services:
   backend:
     build:
       context: ./backend
-      target: development # Use a development stage for faster rebuilds/debugging
+      target: development
     container_name: omnisync_backend
     restart: always
     # Wait for the DB to be healthy before starting API
@@ -44,14 +43,14 @@ services:
       # 2. Volume Mask: Prevents host's node_modules from overriding container's
       - /app/node_modules
     ports:
-      - "8080:8080" # API exposed on port 8080
+      - '8080:8080' # API exposed on port 8080
     command: npm run dev
 
   # --- Frontend Service (React) ---
   frontend:
     build:
       context: ./frontend
-      target: development # Use a development stage
+      target: development
     container_name: omnisync_frontend
     restart: always
     volumes:
@@ -59,14 +58,14 @@ services:
       - ./frontend:/app
       # 2. Volume Mask
       - /app/node_modules
-    # Ports for React dev server, mapping to different host port to avoid conflict
+    # Port for React dev server
     ports:
-      - "5173:5173"
+      - '5173:5173'
     environment:
       # Tells the React app where to find the API
-      VITE_API_URL: http://localhost:8080 # Use localhost for communication from the browser
+      VITE_API_URL: http://localhost:8080 # Use localhost for development
       NODE_ENV: development
 
 # --- Named Volumes Definition ---
 volumes:
-  db_data: # This is the cross-platform way to persist DB data
+  db_data: # Cross-platform persistent volume for PostgreSQL data

@@ -1,5 +1,3 @@
-// backend/src/routes.ts
-
 import { Router, Request, Response } from 'express';
 import { pool, CardData } from './db';
 
@@ -34,7 +32,6 @@ router.get('/cards', async (req: Request, res: Response) => {
     const cards: CardData[] = result.rows.map(mapCardResult);
 
     // Send the JSON response
-    console.log('Fetched cards:', cards);
     res.status(200).json(cards);
   } catch (error) {
     console.error('Error fetching cards:', error);
@@ -42,6 +39,10 @@ router.get('/cards', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * API Route 2: POST /api/cards/:id/click (Update Data)
+ * Purpose: Increment the click_count for a specific card and set first_click_timestamp if not set.
+ */
 router.post('/cards/:id/click', async (req: Request, res: Response) => {
   const cardId = parseInt(req.params.id, 10);
 
@@ -65,7 +66,7 @@ router.post('/cards/:id/click', async (req: Request, res: Response) => {
       [cardId]
     );
 
-    // 3. Handle resource not found (if ID was valid but row was deleted)
+    // 3. Handle resource not found
     if (updateResult.rowCount === 0) {
       return res.status(404).json({ message: 'Card not found.' });
     }
@@ -88,8 +89,6 @@ router.post('/cards/:id/click', async (req: Request, res: Response) => {
  */
 router.post('/reset', async (req: Request, res: Response) => {
   try {
-    console.log('--- POST /api/reset: Reset command received ---');
-
     // SQL query to reset all rows atomically.
     const query = `
             WITH updated AS (
@@ -106,8 +105,6 @@ router.post('/reset', async (req: Request, res: Response) => {
 
     // Map the 8 reset cards to the CardData format
     const resetCards: CardData[] = result.rows.map(mapCardResult);
-
-    console.log(`Successfully reset ${resetCards.length} cards.`);
 
     // Return the full set of reset data for the frontend to update its state
     res.status(200).json(resetCards);
